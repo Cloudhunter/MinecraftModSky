@@ -131,18 +131,18 @@ impl Database {
     pub async fn store_profile_details(
         &self,
         did: &str,
-        likely_country_of_living: &str,
+        modder: &bool,
     ) -> Result<bool> {
         let mut params = Parameters::new();
 
         Ok(query(
             &update("Profile")
                 .set("has_been_processed", "TRUE")
-                .set("likely_country_of_living", params.next())
+                .set("is_minecraft_modder", params.next())
                 .where_(format!("did = {}", params.next()))
                 .to_string(),
         )
-        .bind(likely_country_of_living)
+        .bind(modder)
         .bind(did)
         .execute(&self.connection_pool)
         .await
@@ -192,23 +192,22 @@ impl Database {
         Ok(true)
     }
 
-    pub async fn is_profile_in_this_country(
+    pub async fn is_profile_minecraft_modder(
         &self,
         did: &str,
-        country: &str,
     ) -> Result<Option<bool>> {
         let mut params = Parameters::new();
 
         Ok(query(
-            &select("likely_country_of_living")
+            &select("is_minecraft_modder")
                 .from("Profile")
                 .where_(format!("did = {}", params.next()))
                 .where_("has_been_processed = TRUE")
                 .to_string(),
         )
         .bind(did)
-        .map(|r: PgRow| r.get("likely_country_of_living"))
-        .map(|c: String| c == country)
+        .map(|r: PgRow| r.get("is_minecraft_modder"))
+        .map(|c: bool| c)
         .fetch_optional(&self.connection_pool)
         .await?)
     }

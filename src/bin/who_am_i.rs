@@ -1,11 +1,11 @@
-extern crate nederlandskie;
+extern crate minecraftmodsky;
 
 use std::env;
 
 use anyhow::{Context, Result};
 use dotenv::dotenv;
 
-use nederlandskie::services::Bluesky;
+use minecraftmodsky::services::Bluesky;
 
 #[tokio::main]
 async fn main() -> Result<()> {

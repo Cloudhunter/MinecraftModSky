@@ -6,19 +6,18 @@ use log::{error, info};
 
 use crate::services::Bluesky;
 use crate::services::Database;
-use crate::services::AI;
+
+use fancy_regex::Regex;
 
 pub struct ProfileClassifier {
     database: Arc<Database>,
-    ai: Arc<AI>,
     bluesky: Arc<Bluesky>,
 }
 
 impl ProfileClassifier {
-    pub fn new(database: Arc<Database>, ai: Arc<AI>, bluesky: Arc<Bluesky>) -> Self {
+    pub fn new(database: Arc<Database>, bluesky: Arc<Bluesky>) -> Self {
         Self {
             database,
-            ai,
             bluesky,
         }
     }
@@ -35,6 +34,15 @@ impl ProfileClassifier {
         }
     }
 
+    async fn is_modder(
+        &self,
+        description: &str,
+    ) -> Result<bool> {
+        let re = Regex::new(r"^((?=.*\b.+scraft\b)(?=.*\b(?:mod.*?)\b)|(?=.*modrinth|curseforge)).*$").unwrap();
+        let result = re.is_match(description);
+        assert!(result.is_ok());
+        Ok(result.unwrap())
+    }
     async fn classify_unclassified_profiles(&self) -> Result<()> {
         // TODO: Maybe streamify this so that each thing is processed in parallel
 
@@ -62,17 +70,16 @@ impl ProfileClassifier {
             .await
             .context("Could not fetch profile details")?;
 
-        let country = match details {
+        let modder = match details {
             Some(details) => self
-                .ai
-                .infer_country_of_living(&details.display_name, &details.description)
+                .is_modder(&details.description)
                 .await
-                .context("Could not infer country of living")?,
-            None => "xx".to_owned(),
+                .context("Could not decide if is modder")?,
+            None => false.to_owned()
         };
 
-        self.database.store_profile_details(did, &country).await?;
-        info!("Stored inferred country of living for {did}: {country}");
+        self.database.store_profile_details(did, &modder).await?;
+        info!("Stored modder status for {did}: {modder}");
         Ok(())
     }
 }

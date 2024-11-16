@@ -1,4 +1,4 @@
-mod nederlandskie;
+mod minecraftmodsky;
 
 use std::collections::HashMap;
 
@@ -9,7 +9,7 @@ use chrono::{DateTime, Utc};
 use crate::services::bluesky;
 use crate::services::database::{self, Database};
 
-pub use self::nederlandskie::Nederlandskie;
+pub use self::minecraftmodsky::MinecraftModSky;
 
 #[async_trait]
 pub trait Algo {

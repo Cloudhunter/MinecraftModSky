@@ -1,4 +1,4 @@
-extern crate nederlandskie;
+extern crate minecraftmodsky;
 
 use std::env;
 
@@ -6,7 +6,7 @@ use anyhow::{anyhow, bail, Context, Result};
 use clap::Parser;
 use dotenv::dotenv;
 
-use nederlandskie::services::{Bluesky, Database};
+use minecraftmodsky::services::{Bluesky, Database};
 
 #[derive(Parser, Debug)]
 struct Args {

@@ -1,16 +1,15 @@
-extern crate nederlandskie;
+extern crate minecraftmodsky;
 
 use std::sync::Arc;
 
 use anyhow::Result;
 use env_logger::Env;
-use lingua::LanguageDetectorBuilder;
 use log::info;
 
-use nederlandskie::algos::{AlgosBuilder, Nederlandskie};
-use nederlandskie::config::Config;
-use nederlandskie::processes::{FeedServer, PostIndexer, ProfileClassifier};
-use nederlandskie::services::{Bluesky, Database, AI};
+use minecraftmodsky::algos::{AlgosBuilder, MinecraftModSky};
+use minecraftmodsky::config::Config;
+use minecraftmodsky::processes::{FeedServer, PostIndexer, ProfileClassifier};
+use minecraftmodsky::services::{Bluesky, Database};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -22,23 +21,14 @@ async fn main() -> Result<()> {
 
     info!("Initializing service clients");
 
-    let ai = Arc::new(AI::new(&config.chat_gpt_api_key, "https://api.openai.com"));
     let bluesky = Arc::new(Bluesky::unauthenticated());
     let database = Arc::new(Database::connect(&config.database_url).await?);
-
-    info!("Initializing language detector");
-
-    let language_detector = Arc::new(
-        LanguageDetectorBuilder::from_all_languages_with_cyrillic_script()
-            .with_preloaded_language_models()
-            .build(),
-    );
 
     let algos = Arc::new(
         AlgosBuilder::new()
             .add(
-                "nederlandskie",
-                Nederlandskie::new(language_detector, database.clone()),
+                "minecraftmodsky",
+                MinecraftModSky::new(database.clone()),
             )
             .build(),
     );
@@ -49,7 +39,7 @@ async fn main() -> Result<()> {
         algos.clone(),
         config.clone(),
     );
-    let profile_classifier = ProfileClassifier::new(database.clone(), ai.clone(), bluesky.clone());
+    let profile_classifier = ProfileClassifier::new(database.clone(), bluesky.clone());
     let feed_server = FeedServer::new(database.clone(), config.clone(), algos.clone());
 
     info!("Starting everything up");
